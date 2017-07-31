@@ -5,8 +5,8 @@ class ApplicationController < ActionController::Base
 after_action :server_push_headers
 
   def server_push_headers
-    
-    if response.content_type.include?("text/html") && request.format.html? && self.send(:_layout) == "application"
+
+    if response && response.content_type && response.content_type.include?("text/html") && request.format.html? && self.send(:_layout) == "application"
 
       assets = Rails.cache.fetch("http2-push-assets}", expires_in: 1.week) do
         css = response.body.scan(/link\shref="(.*\/stylesheets\/\w+.css)/).flatten.reject{|asset| asset.match(/admin|theme/)}
@@ -19,10 +19,10 @@ after_action :server_push_headers
         js_assets = js.map do |asset|
           "<#{asset}>; rel=preload; as=script"
         end
-        
+
         (css_assets + js_assets).join(', ')
       end
-      
+
       response.headers['Link'] = assets
     end
   end
